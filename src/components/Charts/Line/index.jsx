@@ -2,69 +2,80 @@ import { useEffect, useRef } from 'react'
 import * as echarts from 'echarts/core'
 import {
   GridComponent,
-  GraphicComponent,
   TitleComponent,
   TooltipComponent,
-  LegendComponent
+  LegendComponent,
+  ToolboxComponent
 } from 'echarts/components'
-import { BarChart as BarChartEcharts } from 'echarts/charts'
+import { LineChart as LineChartEcharts } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 
 // Register the components
 echarts.use([
   GridComponent,
-  GraphicComponent,
-  BarChartEcharts,
-  CanvasRenderer,
   TitleComponent,
   TooltipComponent,
-  LegendComponent
+  LegendComponent,
+  ToolboxComponent,
+  LineChartEcharts,
+  CanvasRenderer
 ])
 
-const BarChart = ({ chartData }) => {
-  const { title, labels, data, orientation } = chartData
+const LineChart = ({ chartData }) => {
+  const { title, labels, data, smooth } = chartData
   const chartRef = useRef(null)
   const chartInstance = useRef(null)
 
-  const barChartOption = {
+  const lineChartOption = {
     title: {
       text: title
     },
-    xAxis: {
-      show: true,
-      data: orientation === 'vertical' ? labels : null
+    tooltip: {
+      trigger: 'axis'
     },
-    yAxis: {
-      show: true,
-      data: orientation === 'horizontal' ? labels : null
+    legend: {
+      data: data.map((series) => series.name)
     },
-    dataGroupId: '',
-    animationDurationUpdate: 500,
-    series: {
-      name: title,
-      type: 'bar',
-      id: 'ageDistribution',
-      data,
-      universalTransition: {
-        enabled: true,
-        divideShape: 'clone'
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    toolbox: {
+      feature: {
+        saveAsImage: {}
       }
     },
-    tooltip: { trigger: 'item' }
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: labels
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: data.map((series) => ({
+      name: series.name,
+      type: 'line',
+      stack: 'Total', // Optional: Used to stack lines
+      data: series.values,
+      smooth
+    }))
   }
 
-  const setBarChart = () => {
-    chartInstance.current.setOption(barChartOption)
+  const setLineChart = () => {
+    chartInstance.current.setOption(lineChartOption)
   }
 
   useEffect(() => {
     const chartDom = chartRef.current
     chartInstance.current = echarts.init(chartDom)
 
-    // Initialize with bar chart
-    setBarChart()
+    // Initialize the chart
+    setLineChart()
 
-    // Use ResizeObserver to handle responsiveness
+    // Use ResizeObserver for responsiveness
     const resizeObserver = new ResizeObserver(() => {
       if (chartInstance.current) {
         chartInstance.current.resize()
@@ -88,4 +99,4 @@ const BarChart = ({ chartData }) => {
   )
 }
 
-export default BarChart
+export default LineChart
